@@ -3,10 +3,10 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Blog Archives - My Octopress Blog</title>
+	<title>My Octopress Blog</title>
     <meta name="author" content="Your Name">
     
-	<meta name="description" content=" 2013 Hello World: The First of Many New Blog Posts Mar 8 ">
+	<meta name="description" content="Search Results $('#search_results').tapir({ 'token': '', 'complete' : function() { document.getElementById('search_loading').style.display="none &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -78,24 +78,22 @@
 <div id="toload">
 <!-- begin toload --> 
     <div id="content" class="inner">
-        
-	
+        <h1 class="entry-title"><center>Search Results</center></h1>
+<div id="search_loading" style="margin: 40px 0">
+    <center><img src="/cliddit/images/loading.gif"></center>
+</div>
 
+<script type="text/javascript" src="/cliddit/javascripts/jquery-tapir.js"></script>
+<div id="search_results" style="display:none">
+<br>
+</div>
+<script>
+         $('#search_results').tapir({
+             'token': '',
+             'complete' : function() { document.getElementById('search_loading').style.display="none"; }
+         });
+</script>
 
-	
-	
-	<section class="archives"><h1 class="year">2013</h1>
-
-<article>
-	<h2 class="title"><a href="/cliddit/blog/2013/03/08/hello-world-the-first-of-many-new-blog-posts/">Hello World: The First of Many New Blog Posts</a></h2>
-	<div class="meta">
-		<span class="date">Mar  8</span>
-		<span class="tags">
-
-</span>
-	    
-	</div>
-</article>
 
     </div>
     <footer id="footer">

@@ -4,15 +4,19 @@
         <loc>
             http://daeken.github.com/cliddit/blog/2013/03/08/hello-world-the-first-of-many-new-blog-posts/
         </loc>
-        <lastmod>2013-03-08T12:59:05-05:00</lastmod>
+        <lastmod>2013-03-08T13:24:00-05:00</lastmod>
     </url>
     <url>
         <loc>http://daeken.github.com/cliddit/blog/archives/</loc>
-        <lastmod>2013-03-08T12:59:05-05:00</lastmod>
+        <lastmod>2013-03-08T13:24:00-05:00</lastmod>
+    </url>
+    <url>
+        <loc>http://daeken.github.com/cliddit/search.html</loc>
+        <lastmod>2013-03-08T13:24:00-05:00</lastmod>
     </url>
     <url>
         <loc>http://daeken.github.com/cliddit/</loc>
-        <lastmod>2013-03-08T12:59:05-05:00</lastmod>
+        <lastmod>2013-03-08T13:24:00-05:00</lastmod>
     </url>
     <url>
         <loc>http://daeken.github.com/cliddit/robots.txt</loc>
