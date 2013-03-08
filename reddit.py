@@ -9,7 +9,7 @@ class Reddit(object):
 		self.init_session()
 
 	def init_session(self):
-		self.session = Session(headers={'user-agent' : '/u/daeken\'s Cliddit'})
+		self.session = Session(headers={'user-agent' : 'Cliddit v0.0.1'})
 		self.modhash = None
 
 	def get(self, path, **kwargs):
