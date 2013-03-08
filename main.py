@@ -18,8 +18,8 @@ class Cliddit(object):
 			json.dump(self.config, fp)
 
 	def login(self, username, password):
-		success, error = self.reddit.login(username, password)
-		if success:
+		if self.reddit.login(username, password):
+			self.username = self.reddit.username
 			self.config['user'] = username, password
 			self.save_config()
 			return True
