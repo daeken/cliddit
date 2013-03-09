@@ -6,10 +6,8 @@ from functools import *
 from reddit import Reddit, RedditException
 from urwid import *
 
-def partial_complete(func, *args, **kwargs):
-	def sub(*_, **__):
-		return func(*args, **kwargs)
-	return sub
+def complete(func, *args, **kwargs):
+	return lambda *_, **__: func(*args, **kwargs)
 
 class Dialog(object):
 	def __init__(self, cld, contents, title):
@@ -26,18 +24,43 @@ class Dialog(object):
 		self.cld.frame.contents['body'] = self.bottom, None
 
 class Window(object):
-	caption = 'unknown'
-	title = 'Untitled'
+	def __init__(self, top):
+		self.top = top
+		self.screenstack = []
+		self.widget = WidgetPlaceholder(None)
+
+	def update(self):
+		cur = self.screenstack[-1]
+		self.widget.original_widget = cur.widget
+		self.caption, self.title = cur.caption, cur.title
+		self.top.update_screen()
+	
+	def push_screen(self, screen):
+		self.screenstack.append(screen)
+		self.update()
+
+	def pop_screen(self):
+		if len(self.screenstack) < 1:
+			return
+
+		self.screenstack.pop()
+		self.update()
+
+	def view_subreddit(self, subreddit=None):
+		self.push_screen(SubRedditScreen(self.top, self, subreddit))
 
 	def view_post(self, post):
-		pass
+		self.push_screen()
 
 	def view_user(self, user):
 		pass
 
-class SubRedditWindow(Window):
-	def __init__(self, top, subreddit=None):
-		self.top = top
+class Screen(object):
+	pass
+
+class SubRedditScreen(Screen):
+	def __init__(self, top, screen, subreddit=None):
+		self.top, self.screen = top, screen
 		self.caption, self.title, self.posts = self.top.reddit.list_posts(subreddit)
 
 		contents = []
@@ -45,8 +68,8 @@ class SubRedditWindow(Window):
 			contents.append(
 				Columns([
 					Text('%i points' % post['score']), 
-					Button(('bold', post['title']), partial_complete(self.view_post, post['post'])), 
-					Button(post['user'], partial_complete(self.view_user, post['user']))
+					Button(('bold', post['title']), complete(self.screen.view_post, post['post'])), 
+					Button(post['user'], complete(self.screen.view_user, post['user']))
 				])
 			)
 
@@ -89,7 +112,9 @@ class Cliddit(object):
 		if 'user' in self.config:
 			self.login(*self.config['user'])
 
-		self.add_window(SubRedditWindow(self))
+		window = Window(self)
+		window.view_subreddit('r4r')
+		self.add_window(window)
 
 		self.last_tb = None
 		while True:
@@ -133,8 +158,7 @@ class Cliddit(object):
 			self.config['user'] = username, password
 			self.save_config()
 
-			self.build_header()
-			self.build_footer()
+			self.update_screen()
 			return True
 		except RedditException, e:
 			return str(e)
@@ -144,8 +168,7 @@ class Cliddit(object):
 		if 'user' in self.config:
 			del self.config['user']
 			self.save_config()
-		self.build_header()
-		self.build_footer()
+		self.update_screen()
 
 	def unhandled(self, key):
 		if key in keyeat:
@@ -238,8 +261,7 @@ class Cliddit(object):
 
 	def build_gui(self):
 		self.frame = Frame(Filler(None))
-		self.build_header()
-		self.build_footer()
+		self.update_screen()
 
 		return self.frame
 
@@ -280,6 +302,9 @@ class Cliddit(object):
 			return
 		self.current_window = i
 		self.frame.contents['body'] = self.windows[self.current_window].widget, None
+		self.update_screen()
+
+	def update_screen(self):
 		self.build_header()
 		self.build_footer()
 
