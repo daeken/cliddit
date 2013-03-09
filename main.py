@@ -50,7 +50,7 @@ class Window(object):
 		self.push_screen(SubRedditScreen(self.top, self, subreddit))
 
 	def view_post(self, post):
-		self.push_screen()
+		self.push_screen(PostScreen(self.top, self, post))
 
 	def view_user(self, user):
 		pass
@@ -59,8 +59,8 @@ class Screen(object):
 	pass
 
 class SubRedditScreen(Screen):
-	def __init__(self, top, screen, subreddit=None):
-		self.top, self.screen = top, screen
+	def __init__(self, top, window, subreddit=None):
+		self.top, self.window = top, window
 		self.caption, self.title, self.posts = self.top.reddit.list_posts(subreddit)
 
 		contents = []
@@ -68,13 +68,18 @@ class SubRedditScreen(Screen):
 			contents.append(
 				Columns([
 					Text('%i points' % post['score']), 
-					Button(('bold', post['title']), complete(self.screen.view_post, post['post'])), 
-					Button(post['user'], complete(self.screen.view_user, post['user']))
+					Button(('bold', post['title']), complete(self.window.view_post, post['post'])), 
+					Button(post['user'], complete(self.window.view_user, post['user']))
 				])
 			)
 
 		walker = SimpleFocusListWalker(contents)
 		self.widget = ListBox(walker)
+
+class PostScreen(Screen):
+	def __init__(self, top, window, post):
+		self.caption, self.title = 'Test', 'No idea'
+		self.widget = Filler(Text('omg!'))
 
 def button(text):
 	def sub(func):
@@ -218,6 +223,10 @@ class Cliddit(object):
 			self.show_logout()
 		else:
 			self.show_login()
+
+	@key('backspace')
+	def _back(self):
+		self.get_current_window().pop_screen()
 
 	def show_login(self):
 		@button('Login')
