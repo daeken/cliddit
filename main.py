@@ -132,7 +132,7 @@ class Cliddit(object):
 			self.login(*self.config['user'])
 
 		window = Window(self)
-		window.view_subreddit('r4r')
+		window.view_subreddit()
 		self.add_window(window)
 
 		self.last_tb = None

@@ -1,5 +1,6 @@
 from requests import Session
 import json
+from pprint import pprint
 
 class RedditException(Exception):
 	pass
@@ -66,3 +67,8 @@ class Reddit(object):
 			name, title = 'home', 'Reddit Home'
 
 		return name, title, entries
+
+	def get_post(self, id):
+		post = self.get('r/%s/comments/%s.json' % id)
+		info, comments = post
+		info = info['data']['children'][0]['data']
