@@ -24,8 +24,10 @@ class Window(object):
 	title = 'Untitled'
 
 class SubRedditWindow(Window):
-	def __init__(self, subreddit=None):
-		self.widget = Text('OMG %r' % subreddit)
+	def __init__(self, top, subreddit=None):
+		self.top = top
+		self.caption, self.title, self.posts = self.top.reddit.list_posts(subreddit)
+		self.widget = Text('OMG %r' % self.title)
 
 def button(text):
 	def sub(func):
@@ -61,7 +63,7 @@ class Cliddit(object):
 		if 'user' in self.config:
 			self.login(*self.config['user'])
 
-		self.add_window(SubRedditWindow())
+		self.add_window(SubRedditWindow(self))
 
 		self.last_tb = None
 		while True:
@@ -122,15 +124,19 @@ class Cliddit(object):
 	def unhandled(self, key):
 		if key in keymap:
 			keymap[key](self)
-		elif key.startswith('meta '):
+		elif isinstance(key, str) and key.startswith('meta '):
 			self.meta(key[5:])
+		elif isinstance(key, tuple):
+			pass
 		else:
-			self.alert('Unhandled key: %r' % key)
+			self.alert('Unhandled key: %r' % (key, ))
 
 	def meta(self, key):
 		keys = '1234567890qwertyuiopasdfghjkl;zxcvbnm,./'
+		if key not in keys:
+			return
 		id = keys.index(key)
-		self.switch_window(id)
+		self.set_current_window(id)
 
 	def dialog(self, widget, title=''):
 		return Dialog(self, widget, title)
@@ -212,7 +218,7 @@ class Cliddit(object):
 	def build_header(self):
 		self.header = AttrMap(
 			Columns([
-				Text('Cliddit -- %r' % self.get_current_window().title if self.get_current_window() else 'Cliddit v0.0.1'), 
+				Text(u'Cliddit v0.0.1 -- %s' % self.get_current_window().title if self.get_current_window() else 'Cliddit v0.0.1'), 
 				Text(self.username if self.username else 'Not logged in', align='right')
 			]), 
 			'status'
@@ -242,6 +248,8 @@ class Cliddit(object):
 			return None
 
 	def set_current_window(self, i):
+		if i >= len(self.windows):
+			return
 		self.current_window = i
 		self.frame.contents['body'] = Filler(self.windows[self.current_window].widget), None
 		self.build_header()

@@ -58,4 +58,11 @@ class Reddit(object):
 				comments=data['num_comments'], 
 				post=(data['subreddit'], data['id'])
 			))
-		return entries
+
+		if subreddit:
+			info = self.get(path + '/about.json')['data']
+			name, title = info['display_name'], info['title']
+		else:
+			name, title = 'home', 'Reddit Home'
+
+		return name, title, entries
