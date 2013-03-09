@@ -41,13 +41,14 @@ class Reddit(object):
 	def logout(self):
 		self.init_session()
 
-	def list_posts(self, subreddit):
+	def list_posts(self, subreddit=None):
 		if subreddit:
 			path = 'r/' + subreddit
 		else:
 			path = '/'
 		entries = []
-		for data in self.get(path + '.json')['data']['children']:
+		top = self.get(path + '.json')
+		for data in top['data']['children']:
 			data = data['data']
 			entries.append(dict(
 				title=data['title'], 

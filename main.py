@@ -19,6 +19,14 @@ class Dialog(object):
 	def close(self):
 		self.cld.frame.contents['body'] = self.bottom, None
 
+class Window(object):
+	caption = 'unknown'
+	title = 'Untitled'
+
+class SubRedditWindow(Window):
+	def __init__(self, subreddit=None):
+		self.widget = Text('OMG %r' % subreddit)
+
 def button(text):
 	def sub(func):
 		return Button(text, on_press=lambda _: func())
@@ -42,6 +50,8 @@ class Cliddit(object):
 		self.reddit = Reddit()
 		self.username = None
 
+		self.windows = []
+
 		loop = MainLoop(self.build_gui(), self.palette, unhandled_input=self.unhandled)
 
 		try:
@@ -51,8 +61,9 @@ class Cliddit(object):
 		if 'user' in self.config:
 			self.login(*self.config['user'])
 
-		self.last_tb = None
+		self.add_window(SubRedditWindow())
 
+		self.last_tb = None
 		while True:
 			try:
 				loop.run()
@@ -71,7 +82,6 @@ class Cliddit(object):
 		@button('Exit')
 		def exit():
 			raise ExitMainLoop()
-
 		@button('Close')
 		def close():
 			dialog.close()
@@ -118,7 +128,9 @@ class Cliddit(object):
 			self.alert('Unhandled key: %r' % key)
 
 	def meta(self, key):
-		self.alert('Meta: %r' % key)
+		keys = '1234567890qwertyuiopasdfghjkl;zxcvbnm,./'
+		id = keys.index(key)
+		self.switch_window(id)
 
 	def dialog(self, widget, title=''):
 		return Dialog(self, widget, title)
@@ -191,9 +203,7 @@ class Cliddit(object):
 		dialog = self.dialog(nbody, 'Logout')
 
 	def build_gui(self):
-		body = Filler(Text('Hello World!'))
-		
-		self.frame = Frame(body)
+		self.frame = Frame(Filler(None))
 		self.build_header()
 		self.build_footer()
 
@@ -202,7 +212,7 @@ class Cliddit(object):
 	def build_header(self):
 		self.header = AttrMap(
 			Columns([
-				Text('Cliddit v0.0.1'), 
+				Text('Cliddit -- %r' % self.get_current_window().title if self.get_current_window() else 'Cliddit v0.0.1'), 
 				Text(self.username if self.username else 'Not logged in', align='right')
 			]), 
 			'status'
@@ -213,6 +223,29 @@ class Cliddit(object):
 		self.footer = AttrMap(Columns([Text('Footer'), Text('foo', align='right')]), 'status_sep')
 
 		self.frame.contents['footer'] = self.footer, None
+
+	def add_window(self, window):
+		self.windows.append(window)
+		self.set_current_window(len(self.windows) - 1)
+
+	def close_window(self):
+		if len(self.windows) > 1:
+			del self.windows[self.current_window]
+			if self.current_window:
+				self.current_window -= 1
+			self.set_current_window(self.current_window)
+
+	def get_current_window(self):
+		if self.windows:
+			return self.windows[self.current_window]
+		else:
+			return None
+
+	def set_current_window(self, i):
+		self.current_window = i
+		self.frame.contents['body'] = Filler(self.windows[self.current_window].widget), None
+		self.build_header()
+		self.build_footer()
 
 if __name__=='__main__':
 	Cliddit(*sys.argv[1:])
