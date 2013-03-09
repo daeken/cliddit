@@ -1,4 +1,7 @@
-import json, os.path, sys
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
+import json, os.path, sys, traceback
 from reddit import Reddit, RedditException
 from urwid import *
 
@@ -48,11 +51,39 @@ class Cliddit(object):
 		if 'user' in self.config:
 			self.login(*self.config['user'])
 
-		try:
-			loop.run()
-		except KeyboardInterrupt:
-			return
+		self.last_tb = None
 
+		while True:
+			try:
+				loop.run()
+				break
+			except KeyboardInterrupt:
+				return
+			except:
+				self.show_error()
+
+		if self.last_tb:
+			print >>sys.stderr, self.last_tb
+
+	def show_error(self):
+		self.last_tb = traceback.format_exc()
+		err = '\n'.join(self.last_tb.split('\n')[-4:-1])
+		@button('Exit')
+		def exit():
+			raise ExitMainLoop()
+
+		@button('Close')
+		def close():
+			dialog.close()
+			self.last_tb = None
+
+		dialog = self.dialog(
+			Pile([
+				Text(err), 
+				Columns([close, exit])
+			]), u'¡Exception!'
+		)
+	
 	def save_config(self):
 		with file(os.path.expanduser('~/.cliddit'), 'w') as fp:
 			json.dump(self.config, fp)
@@ -81,13 +112,32 @@ class Cliddit(object):
 	def unhandled(self, key):
 		if key in keymap:
 			keymap[key](self)
+		elif key.startswith('meta '):
+			self.meta(key[5:])
+		else:
+			self.alert('Unhandled key: %r' % key)
+
+	def meta(self, key):
+		self.alert('Meta: %r' % key)
 
 	def dialog(self, widget, title=''):
 		return Dialog(self, widget, title)
 
+	def alert(self, notice):
+		dialog = self.dialog(
+			Pile([
+				Text(notice), 
+				Button('Close', lambda _: dialog.close())
+			]), 'Alert'
+		)
+
 	@key('q')
 	def _quit(self):
 		raise ExitMainLoop()
+
+	@key('ctrl w')
+	def _closewindow(self):
+		self.close_window()
 
 	@key('?')
 	def _help(self):
