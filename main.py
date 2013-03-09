@@ -53,7 +53,7 @@ class Window(object):
 		self.push_screen(PostScreen(self.top, self, post))
 
 	def view_user(self, user):
-		pass
+		self.push_screen(UserScreen(self.top, self, user))
 
 class Screen(object):
 	pass
@@ -63,15 +63,29 @@ class SubRedditScreen(Screen):
 		self.top, self.window = top, window
 		self.caption, self.title, self.posts = self.top.reddit.list_posts(subreddit)
 
+		def expand_selftext(expander, text, pile):
+			expander = expander.original_widget
+			if expander.get_label() == '[+]':
+				expander.set_label('[-]')
+				pile.contents.append((Text(text), pile.options()))
+			else:
+				expander.set_label('[+]')
+				pile.contents.pop()
+
 		contents = []
 		for post in self.posts:
-			contents.append(
+			expander = WidgetPlaceholder(Text(''))
+			pile = Pile([
 				Columns([
 					Text('%i points' % post['score']), 
+					expander, 
 					Button(('bold', post['title']), complete(self.window.view_post, post['post'])), 
 					Button(post['user'], complete(self.window.view_user, post['user']))
 				])
-			)
+			])
+			if post['selftext']:
+				expander.original_widget = Button('[+]', complete(expand_selftext, expander, post['selftext'], pile))
+			contents.append(pile)
 
 		walker = SimpleFocusListWalker(contents)
 		self.widget = ListBox(walker)
