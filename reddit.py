@@ -40,3 +40,21 @@ class Reddit(object):
 
 	def logout(self):
 		self.init_session()
+
+	def list_posts(self, subreddit):
+		if subreddit:
+			path = 'r/' + subreddit
+		else:
+			path = '/'
+		entries = []
+		for data in self.get(path + '.json')['data']['children']:
+			data = data['data']
+			entries.append(dict(
+				title=data['title'], 
+				user=data['author'], 
+				score=data['score'], 
+				selftext=data['selftext'] if data['is_self'] else None, 
+				comments=data['num_comments'], 
+				post=(data['subreddit'], data['id'])
+			))
+		return entries
