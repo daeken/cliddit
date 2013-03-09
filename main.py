@@ -27,7 +27,19 @@ class SubRedditWindow(Window):
 	def __init__(self, top, subreddit=None):
 		self.top = top
 		self.caption, self.title, self.posts = self.top.reddit.list_posts(subreddit)
-		self.widget = Text('OMG %r' % self.title)
+
+		contents = []
+		for post in self.posts:
+			contents.append(
+				Columns([
+					Text('%i points' % post['score']), 
+					Button(('bold', post['title'])), 
+					Button(post['user'])
+				])
+			)
+
+		walker = SimpleFocusListWalker(contents)
+		self.widget = ListBox(walker)
 
 def button(text):
 	def sub(func):
@@ -35,11 +47,13 @@ def button(text):
 	return sub
 
 keymap = {}
+keyeat = 'up down left right'.split(' ')
 class Cliddit(object):
 	palette = [
 		('status', 'white', 'dark blue'), 
 		('status_sep', 'light blue', 'dark blue'), 
-		('body', 'light gray', 'black')
+		('body', 'light gray', 'black'), 
+		('bold', 'white', 'black')
 	]
 
 	def key(val):
@@ -122,7 +136,9 @@ class Cliddit(object):
 		self.build_footer()
 
 	def unhandled(self, key):
-		if key in keymap:
+		if key in keyeat:
+			pass
+		elif key in keymap:
 			keymap[key](self)
 		elif isinstance(key, str) and key.startswith('meta '):
 			self.meta(key[5:])
@@ -251,7 +267,7 @@ class Cliddit(object):
 		if i >= len(self.windows):
 			return
 		self.current_window = i
-		self.frame.contents['body'] = Filler(self.windows[self.current_window].widget), None
+		self.frame.contents['body'] = self.windows[self.current_window].widget, None
 		self.build_header()
 		self.build_footer()
 
