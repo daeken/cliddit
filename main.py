@@ -2,8 +2,14 @@
 # -*- coding: utf8 -*-
 
 import json, os.path, sys, traceback
+from functools import *
 from reddit import Reddit, RedditException
 from urwid import *
+
+def partial_complete(func, *args, **kwargs):
+	def sub(*_, **__):
+		return func(*args, **kwargs)
+	return sub
 
 class Dialog(object):
 	def __init__(self, cld, contents, title):
@@ -23,6 +29,12 @@ class Window(object):
 	caption = 'unknown'
 	title = 'Untitled'
 
+	def view_post(self, post):
+		pass
+
+	def view_user(self, user):
+		pass
+
 class SubRedditWindow(Window):
 	def __init__(self, top, subreddit=None):
 		self.top = top
@@ -33,8 +45,8 @@ class SubRedditWindow(Window):
 			contents.append(
 				Columns([
 					Text('%i points' % post['score']), 
-					Button(('bold', post['title'])), 
-					Button(post['user'])
+					Button(('bold', post['title']), partial_complete(self.view_post, post['post'])), 
+					Button(post['user'], partial_complete(self.view_user, post['user']))
 				])
 			)
 
