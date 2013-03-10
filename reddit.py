@@ -69,6 +69,36 @@ class Reddit(object):
 		return name, title, entries
 
 	def get_post(self, id):
+		def parse_comments(comments):
+			_children = comments['data']['children']
+			children = []
+			for data in _children:
+				data = data['data']
+				children.append(dict(
+					user=data['author'], 
+					body=data['body'], 
+					score=data['ups']-data['downs'], 
+					votes=(data['ups'], data['downs']), 
+					comments=parse_comments(data['replies']) if data['replies'] else []
+				))
+			return children
+
 		post = self.get('r/%s/comments/%s.json' % id)
 		info, comments = post
 		info = info['data']['children'][0]['data']
+
+		return dict(
+			subreddit=info['subreddit'], 
+			user=info['author'], 
+			score=info['score'], 
+			votes=(info['ups'], info['downs']), 
+			title=info['title'], 
+			selftext=info['selftext'] if info['is_self'] else None, 
+			link=info['url'] if not info['is_self'] else None, 
+			comments=parse_comments(comments)
+		)
+
+if __name__=='__main__':
+	reddit = Reddit()
+	pprint(reddit.get_post((u'r4r', u'19yfmk')))
+	pprint(reddit.get_post((u'r4r', u'19ym56')))

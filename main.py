@@ -90,10 +90,51 @@ class SubRedditScreen(Screen):
 		walker = SimpleFocusListWalker(contents)
 		self.widget = ListBox(walker)
 
+class CommentTreeWidget(TreeWidget):
+	def load_inner_widget(self):
+		data = self.get_node().get_value()
+
+		if 'subreddit' in data: # Top level
+			return Text(data['selftext'])
+		else:
+			return Columns([Text(data['body']), Button(data['user'])])
+
+class CommentNode(TreeNode):
+	def load_widget(self):
+		return CommentTreeWidget(self)
+
+class CommentParentNode(ParentNode):
+	def load_widget(self):
+		return CommentTreeWidget(self)
+
+	def load_child_keys(self):
+		data = self.get_value()
+		return range(len(data['comments']))
+
+	def load_child_node(self, key):
+		childdata = self.get_value()['comments'][key]
+		childdepth = self.get_depth() + 1
+		if childdata['comments']:
+			return CommentParentNode(childdata, parent=self, key=key, depth=childdepth)
+		else:
+			return CommentNode(childdata, parent=self, key=key, depth=childdepth)
+
 class PostScreen(Screen):
 	def __init__(self, top, window, post):
-		self.caption, self.title = 'Test', 'No idea'
-		self.widget = Filler(Text('omg!'))
+		self.top, self.window = top, window
+		self.post = post = self.top.reddit.get_post(post)
+		self.caption, self.title = post['subreddit'] + '/post', post['title']
+
+		post_header = Text('%s -- %s -- %s' % (post['title'], post['subreddit'], post['user']))
+
+		node = CommentParentNode(post)
+		comments = TreeListBox(TreeWalker(node))
+
+		lwalker = SimpleFocusListWalker([
+			post_header, 
+			comments
+		])
+		self.widget = comments#ListBox(lwalker)
 
 def button(text):
 	def sub(func):
@@ -132,8 +173,12 @@ class Cliddit(object):
 			self.login(*self.config['user'])
 
 		window = Window(self)
-		window.view_subreddit()
+		#window.view_subreddit()
+		window.view_post((u'r4r', u'19yfmk'))
 		self.add_window(window)
+
+		loop.run()
+		return
 
 		self.last_tb = None
 		while True:
